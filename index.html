@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta PREPAGO</title>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(135deg,#0ea5e9,#1e40af);
+      min-height:100vh;padding:20px;
+    }
+    .container{max-width:1400px;margin:0 auto}
+    header{
+      background:rgba(255,255,255,.95);backdrop-filter:blur(10px);
+      padding:25px 30px;border-radius:20px;
+      box-shadow:0 10px 40px rgba(0,0,0,.2);
+      margin-bottom:30px;text-align:center;
+    }
+    h1{color:#2d3748;font-size:32px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:12px}
+    .subtitle{color:#718096;font-size:16px}
+
+    .filters-section{
+      background:rgba(255,255,255,.95);backdrop-filter:blur(10px);
+      padding:30px;border-radius:20px;
+      box-shadow:0 10px 40px rgba(0,0,0,.2);margin-bottom:30px;
+    }
+    .filters-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:20px;margin-bottom:20px;
+    }
+    .filter-group{display:flex;flex-direction:column;gap:8px}
+
+    select,input{
+      padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;
+      transition:all .3s ease;background:#fff;color:#2d3748;
+    }
+    select:focus,input:focus{
+      outline:none;border-color:#0ea5e9;
+      box-shadow:0 0 0 3px rgba(14,165,233,.1);
+    }
+
+    .productos-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+      gap:20px;margin-top:20px
+    }
+    .producto{
+      background:#fff;border-radius:16px;padding:25px;
+      box-shadow:0 4px 15px rgba(0,0,0,.1);
+      transition:all .3s ease;border:2px solid transparent;
+    }
+    .producto:hover{
+      transform:translateY(-5px);
+      border-color:#0ea5e9;
+    }
+
+    .marca-tag{
+      background:linear-gradient(135deg,#0ea5e9,#1e40af);
+      color:#fff;padding:4px 12px;border-radius:20px;
+      font-size:12px;font-weight:700;
+    }
+
+    .info-row{
+      display:flex;justify-content:space-between;
+      align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;
+    }
+    .info-value{font-weight:700}
+    .precio-destacado{color:#48bb78;font-size:22px}
+    .precio-coniva{color:#0ea5e9;font-size:18px}
+
+    .btn-fotos{
+      display:block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;
+      padding:12px 20px;border-radius:10px;text-align:center;font-weight:600;
+      margin-top:12px;text-decoration:none;font-size:15px;
+    }
+    .btn-fotos:hover{
+      transform:translateY(-2px);
+      box-shadow:0 4px 12px rgba(245,158,11,.4);
+    }
+
+    /* Password overlay */
+    #passOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0ea5e9 0%,#1e40af 100%);z-index:9999;display:flex;align-items:center;justify-content:center;}
+    .pass-box{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);padding:40px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;max-width:400px;width:90%;}
+    .pass-box h2{color:#2d3748;font-size:24px;margin-bottom:8px;}
+    .pass-box p{color:#718096;font-size:14px;margin-bottom:24px;}
+    .pass-box input{width:100%;padding:14px 18px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;text-align:center;letter-spacing:2px;margin-bottom:16px;}
+    .pass-box input:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,0.15);}
+    .pass-box button{width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9 0%,#1e40af 100%);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;}
+    .pass-box button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(14,165,233,0.4);}
+    .pass-error{color:#e53e3e;font-size:13px;margin-top:10px;display:none;}
+  </style>
+
+</head>
+<body>
+
+<!-- Password overlay -->
+<div id="passOverlay">
+    <div class="pass-box">
+        <h2>Acceso Restringido</h2>
+        <p>Ingresa la clave para consultar precios</p>
+        <input type="password" id="passInput" placeholder="Clave de acceso" autofocus>
+        <button onclick="checkPass()">Entrar</button>
+        <div class="pass-error" id="passError">Clave incorrecta</div>
+    </div>
+</div>
+
+<div class="container">
+
+<header>
+  <h1>Consulta PREPAGO</h1>
+  <p class="subtitle">Filtra por marca, modelo, precio y vencimiento</p>
+</header>
+
+<div class="filters-section">
+
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label>Buscar</label>
+      <input type="text" id="busquedaGeneral" placeholder="Buscar modelo...">
+    </div>
+
+    <div class="filter-group">
+      <label>Marca</label>
+      <select id="marcaFiltro"><option value="">Todas</option></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Modelo</label>
+      <select id="modeloFiltro"><option value="">Todos</option></select>
+    </div>
+  </div>
+
+  <div id="contador" style="background:#1e40af;color:white;padding:12px;border-radius:10px;text-align:center;">
+    Cargando...
+  </div>
+
+</div>
+
+<div class="productos-grid" id="productos"></div>
+
+</div>
+
+<script>
+// --- Password gate ---
+var PASS_KEY = 'cc_precios_auth';
+var CORRECT_PASS = 'precios0326';
+
+if (localStorage.getItem(PASS_KEY) === 'ok') {
+    document.getElementById('passOverlay').style.display = 'none';
+}
+
+function checkPass() {
+    var val = document.getElementById('passInput').value;
+    if (val === CORRECT_PASS) {
+        localStorage.setItem(PASS_KEY, 'ok');
+        document.getElementById('passOverlay').style.display = 'none';
+    } else {
+        document.getElementById('passError').style.display = 'block';
+        document.getElementById('passInput').value = '';
+        document.getElementById('passInput').focus();
+    }
+}
+
+document.getElementById('passInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPass();
+});
+
+// --- App ---
+const API_URL = "https://script.google.com/macros/s/AKfycbwtbu_BFFEFThEtb1wp6C-G24wcoQVu3yl6xTeljy8nIjOmBTFeP5c6-Cx7yeybgIgdhA/exec?tipo=prepago";
+
+let productos = [];
+
+const money = v => {
+  let n = Number((v || "").toString().replace(/[^0-9.\-]/g,""));
+  return isFinite(n) ? n.toLocaleString("es-MX",{style:"currency",currency:"MXN"}) : "$0.00";
+};
+
+const formatDate = v => {
+  if(!v) return "";
+  if(v.toString().includes("T")){
+    const date = new Date(v);
+    return date.toLocaleDateString("es-MX", {year:"numeric", month:"2-digit", day:"2-digit"});
+  }
+  return v;
+};
+
+async function init(){
+  const contador = document.getElementById("contador");
+  contador.textContent="Cargando productos...";
+
+  try{
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    console.log("DATA:", data);
+    console.log("PRIMERA FILA:", data.rows?.[0]);
+
+    productos = data.rows || [];
+
+    const marcas = [...new Set(productos.map(p=>p.MARCA).filter(Boolean))].sort();
+    document.getElementById("marcaFiltro").innerHTML =
+      '<option value="">Todas</option>' +
+      marcas.map(m=>'<option value="'+m+'">'+m+'</option>').join('');
+
+    actualizarModelos();
+    pintarResultados(productos);
+
+  }catch(err){
+    console.error(err);
+    contador.textContent="Error al cargar";
+  }
+}
+
+function actualizarModelos(){
+  const marca = document.getElementById("marcaFiltro").value;
+  const modelos = [...new Set(
+    productos.filter(p=>!marca || p.MARCA===marca).map(p=>p.MODELO)
+  )].sort();
+  document.getElementById("modeloFiltro").innerHTML =
+    '<option value="">Todos</option>' +
+    modelos.map(m=>'<option>'+m+'</option>').join('');
+}
+
+function filtrar(){
+  const q = document.getElementById("busquedaGeneral").value.toLowerCase();
+  const marca = document.getElementById("marcaFiltro").value;
+  const modelo = document.getElementById("modeloFiltro").value;
+
+  const filtrados = productos.filter(p=>{
+    return (!marca || p.MARCA===marca) &&
+           (!modelo || p.MODELO===modelo) &&
+           (!q || p.MODELO.toLowerCase().includes(q));
+  });
+
+  pintarResultados(filtrados);
+}
+
+function pintarResultados(rows){
+  const cont = document.getElementById("productos");
+  const contador = document.getElementById("contador");
+  cont.innerHTML="";
+
+  if(!rows.length){
+    contador.textContent="0 resultados";
+    cont.innerHTML="<p style='color:white;text-align:center;'>No se encontraron equipos</p>";
+    return;
+  }
+
+  rows.forEach(p=>{
+    const div = document.createElement("div");
+    div.className="producto";
+
+    div.innerHTML =
+      '<h3><span class="marca-tag">'+p.MARCA+'</span> '+p.MODELO+'</h3>' +
+      '<div class="info-row"><span>Precio SIN IVA</span><span class="precio-destacado">'+money(p["PRECIO PUBLICO PROMOCION SIN IVA"])+'</span></div>' +
+      '<div class="info-row"><span>Precio CON IVA</span><span class="precio-coniva">'+money(p["PRECIO PUBLICO PROMOCION CON IVA"])+'</span></div>' +
+      '<div class="info-row"><span>Vencimiento</span><span>'+formatDate(p.Fin)+'</span></div>' +
+      '<a class="btn-fotos" target="_blank" href="https://www.telcel.com/tienda/busqueda/'+encodeURIComponent(p.MARCA+' '+p.MODELO)+'">Ver en Telcel</a>';
+
+    cont.appendChild(div);
+  });
+
+  contador.textContent = rows.length + ' resultados';
+}
+
+document.getElementById("busquedaGeneral").addEventListener("input", filtrar);
+document.getElementById("marcaFiltro").addEventListener("change", function(){ actualizarModelos(); filtrar(); });
+document.getElementById("modeloFiltro").addEventListener("change", filtrar);
+
+init();
+</script>
+
+</body>
+</html>
