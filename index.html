@@ -316,7 +316,7 @@ function checkSesionGuardada(){
   return false;
 }
 async function validarPassword(){
-  var pwd=document.getElementById('passwordInput').value;
+  var pwd=document.getElementById('passwordInput').value.trim();
   var hash=await hashStr(pwd);
   if(HASHES[hash]){
     usuarioActual=HASHES[hash];
