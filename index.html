@@ -567,7 +567,14 @@ function actualizarGraficos(f,raw){
 }
 
 function actualizarTop20(f){
-  var sorted=f.slice().sort(function(a,b){return b.utilidad-a.utilidad;}).slice(0,20);
+  // Agrupar por producto antes de ordenar
+  var mapProd={};
+  f.forEach(function(d){
+    if(!mapProd[d.producto])mapProd[d.producto]={producto:d.producto,cantidad:0,utilidad:0};
+    mapProd[d.producto].cantidad+=d.cantidad;
+    mapProd[d.producto].utilidad+=d.utilidad;
+  });
+  var sorted=Object.values(mapProd).sort(function(a,b){return b.utilidad-a.utilidad;}).slice(0,20);
   var half=Math.ceil(sorted.length/2);
   var col1=sorted.slice(0,half),col2=sorted.slice(half);
 
