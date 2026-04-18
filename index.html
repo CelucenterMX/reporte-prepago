@@ -249,12 +249,12 @@ var SESSION_KEY='celucc_util_session';
 var SESSION_DAYS=30;
 
 var HASHES={
-  'bd7d8a465b6f7d634bf0a194f553124d72069bccd5d7bf6cff9d2d7184db2dce':{equipo:null,nombre:'Admin (Todo)'},
-  '7ce6cb0d38d875fd9dbb747d524ffd2e46b528883a80295b470dfb1d2cf98d25':{equipo:'Equipo 1',nombre:'Alejandro - Equipo 1'},
-  '42857e85d625127fb92e6c4e31249f876fa54de1722907c80d3e882fd9a20d93':{equipo:'Equipo 2',nombre:'Paola - Equipo 2'},
-  'e4125faaf99b56124a8001b3a6d101c560d5ac5b72f0635647b48d0c16e23459':{equipo:'Equipo 3',nombre:'Rosario - Equipo 3'},
-  '26b494d1b53cbf327e5e8ca2d1b0d2f84a8bcd85d4443971372bf24a1f0e23b8':{equipo:'Equipo 4',nombre:'Equipo 4'},
-  '69a9da333371d141c75c05c67553d5cce80e224fb4923358e562a6d1b9e38342':{equipo:'Equipo 5',nombre:'Luis Fernando - Equipo 5'}
+  'R0FMQVhJQTM=':{equipo:null,nombre:'Admin (Todo)'},
+  'VE9STkFETzU=':{equipo:'Equipo 1',nombre:'Alejandro - Equipo 1'},
+  'R1JBTklaTzI=':{equipo:'Equipo 2',nombre:'Paola - Equipo 2'},
+  'VFNVTkFNSTk=':{equipo:'Equipo 3',nombre:'Rosario - Equipo 3'},
+  'TUVURU9STzc=':{equipo:'Equipo 4',nombre:'Equipo 4'},
+  'Q09NRVRBNg==':{equipo:'Equipo 5',nombre:'Luis Fernando - Equipo 5'}
 };
 
 var usuarioActual=null;
@@ -295,10 +295,7 @@ function setFechasMesActual(){
   document.getElementById('fechaFin').value=hoy.toISOString().split('T')[0];
 }
 
-async function hashStr(str){
-  var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-}
+function hashStr(str){return btoa(str);}
 function iniciarSesion(hash){
   localStorage.setItem(SESSION_KEY,JSON.stringify({hash:hash,ts:Date.now()}));
 }
@@ -315,9 +312,9 @@ function checkSesionGuardada(){
   }catch(e){}
   return false;
 }
-async function validarPassword(){
+function validarPassword(){
   var pwd=document.getElementById('passwordInput').value.trim();
-  var hash=await hashStr(pwd);
+  var hash=hashStr(pwd);
   if(HASHES[hash]){
     usuarioActual=HASHES[hash];
     iniciarSesion(hash);
