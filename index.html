@@ -295,6 +295,7 @@ function validarPassword(){
   var pwd=document.getElementById('passwordInput').value;
   if(CONTRASENAS[pwd]){
     usuarioActual=CONTRASENAS[pwd];
+    localStorage.setItem('cc_reporte_pwd', pwd);
     document.getElementById('loginContainer').classList.add('hidden');
     document.getElementById('dashboardContainer').style.display='block';
     cargarDatos();
@@ -305,6 +306,7 @@ function validarPassword(){
   }
 }
 function cerrarSesion(){
+  localStorage.removeItem('cc_reporte_pwd');
   document.getElementById('loginContainer').classList.remove('hidden');
   document.getElementById('dashboardContainer').style.display='none';
   document.getElementById('passwordInput').value='';
@@ -569,7 +571,17 @@ function renderTabla(f){
   document.getElementById('dataCount').textContent=f.length+' productos | '+categoriaActual.toUpperCase();
 }
 
-window.addEventListener('load',function(){document.getElementById('passwordInput').focus();});
+window.addEventListener('load',function(){
+  var saved=localStorage.getItem('cc_reporte_pwd');
+  if(saved&&CONTRASENAS[saved]){
+    usuarioActual=CONTRASENAS[saved];
+    document.getElementById('loginContainer').classList.add('hidden');
+    document.getElementById('dashboardContainer').style.display='block';
+    cargarDatos();
+  }else{
+    document.getElementById('passwordInput').focus();
+  }
+});
 </script>
 </body>
 </html>
