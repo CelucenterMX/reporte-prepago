@@ -343,7 +343,7 @@ async function cargarDatos(){
       datosRaw.push({fecha:fecha,mes:fecha?fecha.getMonth()+1:0,sucursal:sucursal,vendedor:vendedor,categoria:categoria,producto:producto,cantidad:cantidad,costo:costo,precio:precio,utilidad:utilidad,equipo:equipo});
     });
 
-    setFechasMesActual();
+    verTodo();
     document.getElementById('loading').style.display='none';
     document.getElementById('dashboard').style.display='block';
     document.getElementById('usuarioLabel').textContent='👤 '+usuarioActual.nombre;
