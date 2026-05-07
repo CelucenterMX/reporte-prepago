@@ -100,6 +100,10 @@
     .date-range-inputs button:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(59,130,246,.4);}
 
     @media(max-width:700px){.top20-grid{grid-template-columns:1fr;}}
+    .catalogo-toggle{padding:16px 22px;border-radius:12px;border:1px solid #475569;background:rgba(30,41,59,0.6);color:#94a3b8;font-weight:700;font-size:1em;cursor:pointer;transition:.3s;white-space:nowrap;}
+    .catalogo-toggle.active{background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#fff;border-color:#059669;box-shadow:0 5px 20px rgba(5,150,105,0.3);}
+    .catalogo-toggle:hover:not(.active){background:rgba(51,65,85,0.8);color:#cbd5e1;}
+    .catalogo-toggle .catalogo-count{font-size:0.75em;opacity:0.8;margin-left:5px;}
   </style>
 </head>
 <body>
@@ -135,6 +139,9 @@
       <div class="cat-tab active" id="tabPrepago" onclick="cambiarCategoria('prepago')">📱 Prepago</div>
       <div class="cat-tab" id="tabAccesorios" onclick="cambiarCategoria('accesorios')">🎧 Accesorios</div>
     </div>
+    <button class="catalogo-toggle" id="btnCatalogoCC" onclick="toggleCatalogoCC()" title="Mostrar solo productos del Catálogo CeluCenter CC">
+      📋 Solo Catálogo CC<span class="catalogo-count" id="catalogoCCCount"></span>
+    </button>
   </div>
 
   <div id="errorMsg2" class="error" style="display:none;"></div>
@@ -241,6 +248,8 @@
 var datosRaw=[],categoriaActual='prepago';
 var filtros={equipo:[],sucursal:[],fechaInicio:null,fechaFin:null},charts={},ordenActual={columna:null,direccion:'asc'};
 var ordenUnidades={columna:null,direccion:'asc'};
+var catalogoCC=new Set(),filtroCatalogoCC=false;
+var CATALOGO_SHEET_ID='1O8be9-hfps_LyIvXKka0jd9_f9oiDkj-Tjz-bPd7sKo';
 
 var SHEET_ID='19-QtiBnvjUWJ22KgqAXAQdhcN7_PkGEzkUPDZjJRch4';
 var SHEET_NAME='Resultado';
@@ -314,7 +323,32 @@ function cerrarSesion(){
   document.getElementById('loading').style.display='block';
 }
 
+async function cargarCatalogoCC(){
+  try{
+    var res=await fetch('https://docs.google.com/spreadsheets/d/'+CATALOGO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet=CatalogoCC');
+    var txt=await res.text();
+    var ini=txt.indexOf('{'),fin=txt.lastIndexOf('}');
+    var json=JSON.parse(txt.substring(ini,fin+1));
+    catalogoCC.clear();
+    json.table.rows.forEach(function(r){
+      // Col 2: Nombre, Col 3: Nombre en STX
+      var nombre=(r.c[2]&&r.c[2].v)?r.c[2].v.toString().trim().toLowerCase():'';
+      var nombreStx=(r.c[3]&&r.c[3].v)?r.c[3].v.toString().trim().toLowerCase():'';
+      if(nombre)catalogoCC.add(nombre);
+      if(nombreStx)catalogoCC.add(nombreStx);
+    });
+    document.getElementById('catalogoCCCount').textContent='('+catalogoCC.size+' prods)';
+  }catch(e){console.warn('CatalogoCC no disponible:',e.message);}
+}
+
+function toggleCatalogoCC(){
+  filtroCatalogoCC=!filtroCatalogoCC;
+  document.getElementById('btnCatalogoCC').classList.toggle('active',filtroCatalogoCC);
+  actualizarDashboard();
+}
+
 async function cargarDatos(){
+  cargarCatalogoCC();
   try{
     var res=await fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(SHEET_NAME));
     var txt=await res.text();
@@ -397,7 +431,8 @@ function getDatosFiltrados(){
     var fechaOk=true;
     if(d.fecha){if(fechaIni&&d.fecha<fechaIni)fechaOk=false;if(fechaFin&&d.fecha>fechaFin)fechaOk=false;}else{fechaOk=false;}
     var usuarioOk=usuarioActual.equipo===null||d.equipo===usuarioActual.equipo;
-    return catOk&&precioOk&&eqOk&&sucOk&&prodOk&&fechaOk&&usuarioOk;
+    var ccOk=!filtroCatalogoCC||catalogoCC.has(d.producto.toLowerCase());
+    return catOk&&precioOk&&eqOk&&sucOk&&prodOk&&fechaOk&&usuarioOk&&ccOk;
   });
 }
 
