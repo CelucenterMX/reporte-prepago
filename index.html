@@ -251,6 +251,47 @@ var ordenUnidades={columna:null,direccion:'asc'};
 var catalogoCC=new Set(),filtroCatalogoCC=false;
 var CATALOGO_SHEET_ID='1O8be9-hfps_LyIvXKka0jd9_f9oiDkj-Tjz-bPd7sKo';
 
+// Catálogo CC local — generado automáticamente desde CatalogoCC sheet (49 productos)
+// Actualizar si cambia el catálogo ejecutando scripts/generar_catalogo_cc.py
+var CATALOGO_CC_LOCAL=[
+  "combo cargador tipo c 1m 2.4a 12w max","gar142n combo cargador tipo c 1m 2.4a 12w max",
+  "combo cargador ip 1m 2.4a 12w max","gar143b combo cargador ip 1m 2.4a 12w max",
+  "cargador de doble puerto (usb c y usb a)20w","gar161b cargador de doble puerto (usb c y usb a)20w",
+  "cargador de doble puerto (usb c y usb a) 20w y cable ip","gar163b cargador de doble puerto (usb c y usb a) 20w y cable ip",
+  "cargador gan 65w y cable tipoc 2m","gar322n cargador gan 65w y cable tipoc 2m",
+  "cargador gan 20w pd 20w max","gar152n cargador gan 20w pd 20w max",
+  "cargador gan 20w max y cable tipo c 3a","gar153b cargador gan 20w max y cable tipo c 3a",
+  "cargador para auto 3a tipo c","gar241g cargador para auto 3a tipo c",
+  "cargador inalámbrico magnético","gar281n cargador inalámbrico magnético",
+  "batería portátil 10000mah 10.5w max","gar148n batería portátil 10000mah 10.5w max",
+  "batería portátil 20000mah 22.5w max","gar158n batería portátil 20000mah 22.5w max",
+  "cable tipo c","cab164n cable tipo c",
+  "cable tipo c 3a","cab251n cable tipo c 3a",
+  "cable tipo c a tipo c 3a","cab252b cable tipo c a tipo c 3a",
+  "cable tipo c-ip 3a","cab257b cable tipo c-ip 3a",
+  "cable tipo c-c 3a","cab270n cable tipo c-c 3a",
+  "audífonos 3.5mm metálico","aut111n audífonos 3.5mm metálico",
+  "audífonos 3.5mm tipo-c","aut125n audífonos 3.5mm tipo-c",
+  "audífonos bt tws","aut201n audífonos bt tws",
+  "audífonos inalámbricos tws","aut212b audífonos inalámbricos tws",
+  "bocina inalámbrica bt","boc060r bocina inalámbrica bt","boc062n bocina inalámbrica bt","boc244n bocina inalámbrica bt",
+  "mouse inalambirco 1.5v 50mh","rat001n mouse inalambirco 1.5v 50mh",
+  "transmisor bluetooth","cp0069 transmisor bluetooth",
+  "soporte","m19-06 soporte moto/bici","soporte auto","mhl-030 soporte auto",
+  "control hisense","control hisense ce-ch37",
+  "control samsung","control samsung ce-cs315",
+  "control roku ce-drw1","control lg","control lg ce-cl2024","control sky","control sky ce-sxy",
+  "mica hidrogel privacidad rhino","mica hidrogel privacidad hd",
+  "linterna de mano ali-11","linterna de mano ali-23","linterna cabeza ali-26","linterna cabeza yl194-td05",
+  "raqueta jafepa ro-177","raqueta mata moscos jafepa ro-177",
+  "mini bateria magnetica pl-19","cortadora de cabello mr-116","antena interior hd ce-at14",
+  "ventilador de pedestal hc","bocina alexe pro max 15x","bocina alexe pro max 15w","bocina alexe dof",
+  "aspiradora/sopladora mr-925","microfono inalambrico blutooth mr-891",
+  "bocina rd-260","bocina rd-259","bocina rd-261"
+];
+
+function normStr(s){return s.toLowerCase().replace(/\s+/g,' ').trim();}
+
 var SHEET_ID='19-QtiBnvjUWJ22KgqAXAQdhcN7_PkGEzkUPDZjJRch4';
 var SHEET_NAME='Resultado';
 
@@ -324,21 +365,28 @@ function cerrarSesion(){
 }
 
 async function cargarCatalogoCC(){
+  // Seed desde catálogo local (siempre disponible)
+  catalogoCC.clear();
+  CATALOGO_CC_LOCAL.forEach(function(n){catalogoCC.add(n);});
+  document.getElementById('catalogoCCCount').textContent='(49 prods)';
+
+  // Intentar actualizar desde sheet si está público
   try{
     var res=await fetch('https://docs.google.com/spreadsheets/d/'+CATALOGO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet=CatalogoCC');
+    if(!res.ok)return; // sheet privado, usar local
     var txt=await res.text();
     var ini=txt.indexOf('{'),fin=txt.lastIndexOf('}');
     var json=JSON.parse(txt.substring(ini,fin+1));
+    if(!json.table||!json.table.rows||json.table.rows.length<5)return;
     catalogoCC.clear();
     json.table.rows.forEach(function(r){
-      // Col 2: Nombre, Col 3: Nombre en STX
-      var nombre=(r.c[2]&&r.c[2].v)?r.c[2].v.toString().trim().toLowerCase():'';
-      var nombreStx=(r.c[3]&&r.c[3].v)?r.c[3].v.toString().trim().toLowerCase():'';
+      var nombre=(r.c[2]&&r.c[2].v)?normStr(r.c[2].v.toString()):'';
+      var nombreStx=(r.c[3]&&r.c[3].v)?normStr(r.c[3].v.toString()):'';
       if(nombre)catalogoCC.add(nombre);
       if(nombreStx)catalogoCC.add(nombreStx);
     });
-    document.getElementById('catalogoCCCount').textContent='('+catalogoCC.size+' prods)';
-  }catch(e){console.warn('CatalogoCC no disponible:',e.message);}
+    document.getElementById('catalogoCCCount').textContent='('+json.table.rows.length+' prods)';
+  }catch(e){/* usar local */}
 }
 
 function toggleCatalogoCC(){
@@ -431,7 +479,7 @@ function getDatosFiltrados(){
     var fechaOk=true;
     if(d.fecha){if(fechaIni&&d.fecha<fechaIni)fechaOk=false;if(fechaFin&&d.fecha>fechaFin)fechaOk=false;}else{fechaOk=false;}
     var usuarioOk=usuarioActual.equipo===null||d.equipo===usuarioActual.equipo;
-    var ccOk=!filtroCatalogoCC||catalogoCC.has(d.producto.toLowerCase());
+    var ccOk=!filtroCatalogoCC||catalogoCC.has(normStr(d.producto));
     return catOk&&precioOk&&eqOk&&sucOk&&prodOk&&fechaOk&&usuarioOk&&ccOk;
   });
 }
