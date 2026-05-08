@@ -470,8 +470,8 @@ function getDatosFiltrados(){
   if(fechaFinVal){var p=fechaFinVal.split('-');fechaFin=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));fechaFin.setHours(23,59,59,999);}
 
   return datosRaw.filter(function(d){
-    var catOk=d.categoria.indexOf(catFilter)!==-1;
-    var precioOk=categoriaActual==='prepago'?(d.precio>500):true;
+    var catOk=filtroCatalogoCC?(d.categoria.indexOf('PREPAGO')!==-1||d.categoria.indexOf('ACCESORIOS')!==-1):d.categoria.indexOf(catFilter)!==-1;
+    var precioOk=categoriaActual==='prepago'?(filtroCatalogoCC||d.precio>500):true;
     var eqOk=filtros.equipo.length===0||filtros.equipo.indexOf(d.equipo)!==-1;
     var sucOk=filtros.sucursal.length===0||filtros.sucursal.map(function(s){return s.toUpperCase();}).indexOf(d.sucursal)!==-1;
     var p=(document.getElementById('buscaProducto').value||'').toLowerCase();
